@@ -1,5 +1,5 @@
 {
-  "name": "tauri-app",
+  "name": "RVNLauncher",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -10,6 +10,8 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@headlessui/react": "^2.2.8",
+    "@heroicons/react": "^2.2.0",
     "@tailwindcss/vite": "^4.1.13",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "~2.4.0",
@@ -20,7 +22,8 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.9.1",
-    "tailwindcss": "^4.1.13"
+    "tailwindcss": "^4.1.13",
+    "use-debounce": "^10.0.6"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",

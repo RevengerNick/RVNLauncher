@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "tauri-app",
-  "version": "0.1.0",
-  "identifier": "com.revenger.tauri-app",
+  "productName": "RVNLauncher",
+  "version": "0.3.0",
+  "identifier": "dev.revenger.RVNLauncher",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -12,14 +12,24 @@
   "app": {
     "windows": [
       {
-        "title": "tauri-app",
-        "width": 800,
+        "title": "RVNLauncher",
+        "width": 1400,
         "height": 600
       }
     ],
     "security": {
-      "csp": null
-    }
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": {
+          "allow": ["$APPDATA/**"]
+        }
+        
+      },
+      "capabilities": [
+        "default"
+      ]
+  }
   },
   "bundle": {
     "active": true,

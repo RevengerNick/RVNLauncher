@@ -5,6 +5,7 @@ export interface GameInfo {
   name: string;
   path: string;
   game_type: 'exe' | 'py' | 'sh' | 'bat' | 'cmd';
+  version: string;
 }
 
 /**

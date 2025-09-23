@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { GameEntry, getAllGamesFromDb } from '../utils/db';
 import { selectGameDirectory, scanForGames } from '../utils/game-scanner';
 import { addGameToDb } from '../utils/db';
@@ -8,8 +8,8 @@ function Library() {
   const [games, setGames] = useState<GameEntry[]>([]);
   const [isScanning, setIsScanning] = useState(false);
   const [isFullScan, setIsFullScan] = useState(false);
+  const [showHidden, setShowHidden] = useState(false);
 
-  // Загружаем игры из БД при монтировании компонента
   useEffect(() => {
     const loadGames = async () => {
       const gamesFromDb = await getAllGamesFromDb();
@@ -17,6 +17,20 @@ function Library() {
     };
     loadGames();
   }, []);
+
+  const sortedGames = useMemo(() => {
+    const _games = [...games].sort((a, b) => {
+      if (a.rating !== b.rating) {
+        return b.rating - a.rating; // Сначала по рейтингу (убывание)
+      }
+      return a.name.localeCompare(b.name); // Затем по имени
+    });
+    if (showHidden) {
+      return _games;
+    } else {
+      return _games.filter(g => !g.is_hidden);
+    }
+  }, [games, showHidden]);
 
   const handleScanDirectory = async () => {
     const selectedDir = await selectGameDirectory();
@@ -28,8 +42,10 @@ function Library() {
         if (!games.some(g => g.path === scannedGame.path)) {
             const newGameEntry: GameEntry = {
               ...scannedGame,
-              name: scannedGame.name.replace(/\.(exe|py|sh|bat|cmd)$/i, ''), // Убираем расширение для названия
+              name: scannedGame.name.replace(/\.(exe|py|sh|bat|cmd)$/i, ''),
               play_time_seconds: 0,
+              rating: 0,
+              is_hidden: false,
             };
             await addGameToDb(newGameEntry);
         }
@@ -54,6 +70,13 @@ function Library() {
               onChange={(e) => setIsFullScan(e.target.checked)} 
             />
             <span>Полный поиск</span>
+            <input 
+              type="checkbox" 
+              className="form-checkbox h-5 w-5 text-blue-500 bg-gray-700 border-gray-600 rounded"
+              checked={showHidden} 
+              onChange={(e) => setShowHidden(e.target.checked)} 
+            />
+            <span>Показать скрытые</span>
           </label>
           <button 
             onClick={handleScanDirectory} 
@@ -69,8 +92,8 @@ function Library() {
         <p className="text-gray-400">Игры не найдены. Добавьте папку с играми, чтобы начать.</p>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-        {games.map(game => (
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+        {sortedGames.map(game => (
           <GameCard key={game.path} game={game} />
         ))}
       </div>

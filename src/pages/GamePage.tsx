@@ -1,64 +1,78 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { GameEntry, getAllGamesFromDb } from '../utils/db';
-import { callLaunchGameCommand } from '../utils/start-game';
+import { useGameDetails } from '../hooks/useGameDetails';
+import { GameHeader } from '../components/GameHeader';
+import { GameActions } from '../components/GameActions';
+import { GameMetadata } from '../components/GameMetadata';
+import { GameSavesManager } from '../components/GameSavesManager';
+import { deleteGame } from '../utils/db'; // Для удаления игры (если решишь добавить)
+import { useNavigate } from 'react-router-dom';
+
 
 function GamePage() {
-  const { gamePath } = useParams<{ gamePath: string }>();
   const navigate = useNavigate();
-  const [game, setGame] = useState<GameEntry | null>(null);
+  
+  // Вся сложная логика теперь здесь
+  const {
+    game,
+    loading,
+    iconDataUrl,
+    gameFolderIds,
+    setGameFolderIds,
+    handleSetIcon,
+    handleRatingChange,
+    handleToggleHidden,
+    handleOpenFolder,
+    saveName,
+    saveVersion,
+    saveDescription
+  } = useGameDetails();
 
-  // Декодируем путь из URL
-  const decodedPath = gamePath ? decodeURIComponent(gamePath) : '';
-
-  useEffect(() => {
-    if (!decodedPath) return;
-    
-    const findGame = async () => {
-      const allGames = await getAllGamesFromDb();
-      const foundGame = allGames.find(g => g.path === decodedPath);
-      if (foundGame) {
-        setGame(foundGame);
-      } else {
-        // Если игра не найдена, можно перенаправить на главную
-        navigate('/');
-      }
-    };
-    findGame();
-  }, [decodedPath, navigate]);
-
-  if (!game) {
+  if (loading) {
     return <div>Загрузка...</div>;
   }
+  
+  if (!game) {
+    // Это состояние должно быть обработано в useGameDetails, если игра не найдена
+    return <div>Игра не найдена.</div>;
+  }
+
+  // Функция для удаления игры (можно добавить в GameHeader или отдельную кнопку)
+  const handleDeleteGame = async (gamePath: string) => {
+    if (window.confirm('Вы уверены, что хотите удалить эту игру из библиотеки?')) {
+      await deleteGame(gamePath); // Вызываем команду удаления из БД
+      navigate('/'); // Перенаправляем на главную страницу после удаления
+    }
+  };
 
   return (
     <div>
-      <div className="flex items-center gap-6 mb-8">
-        {/* Прямоугольник-заглушка для иконки */}
-        <div className="w-40 h-56 bg-gray-700 rounded-lg flex-shrink-0"></div>
-        <div>
-          <h1 className="text-5xl font-bold">{game.name}</h1>
-          <p className="text-gray-400">Сыграно: {Math.round(game.play_time_seconds / 60)} минут</p>
-        </div>
-      </div>
+      {/* Заголовок с иконкой, названием, рейтингом и кнопками скрытия/удаления */}
+      <GameHeader
+        game={game}
+        iconDataUrl={iconDataUrl}
+        onIconChange={handleSetIcon}
+        onRatingChange={handleRatingChange}
+        onNameChange={saveName}
+        onToggleHidden={handleToggleHidden}
+        onDeleteGame={handleDeleteGame} // Передаем функцию удаления
+      />
       
-      <button 
-        onClick={() => callLaunchGameCommand(game.path)}
-        className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded text-lg mb-8"
-      >
-        Играть
-      </button>
+      {/* Кнопки действий: Играть, Управление папками, Открыть папку */}
+      <GameActions
+        gamePath={game.path}
+        onOpenFolder={handleOpenFolder}
+        initialFolderIds={gameFolderIds}
+        onFoldersChange={setGameFolderIds}
+      />
 
-      <div>
-        <h2 className="text-2xl font-bold mb-2">Описание</h2>
-        <textarea 
-          className="w-full bg-gray-800 p-2 rounded border border-gray-700"
-          rows={5}
-          defaultValue={game.description || ''}
-          placeholder="Добавьте ваше описание..."
-          // TODO: Добавить логику сохранения описания по db_update_game_description
-        ></textarea>
-      </div>
+      {/* Блок с описанием и версией */}
+      <GameMetadata 
+        game={game}
+        onDescriptionChange={saveDescription}
+        onVersionChange={saveVersion}
+      />
+
+      {/* Блок управления сохранениями */}
+      <GameSavesManager game={game} />
     </div>
   );
 }

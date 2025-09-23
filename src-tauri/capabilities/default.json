@@ -32,9 +32,45 @@
         "allow": ["**"]
       }
     },
+    {
+      "identifier": "fs:allow-copy-file",
+      "scope": {
+        "allow": [
+          {
+            "path": "**", 
+            "baseDir": "Any"
+          },
+          {
+            "path": "$APPDATA/**", 
+            "baseDir": "Any"
+          }
+        ]
+      }
+    },
+    {
+      "identifier": "fs:allow-mkdir",
+      "scope": {
+        "allow": ["$APPDATA/icons"]
+      }
+    },
+    "fs:allow-create",
     "fs:allow-app-read-recursive",
     "dialog:default",
     "fs:default",
+    {
+      "identifier": "fs:allow-write-text-file",
+      "scope": {
+        "allow": ["$APPDATA/*"]
+      }
+    },{
+      "identifier": "opener:allow-open-path",
+      "scope": {
+        "allow": [
+          { "path": "$APPDATA/backups" },
+          { "path": "$APPDATA/backups/*" }
+        ]
+      }
+    },
     "os:default"
   ]
 }
