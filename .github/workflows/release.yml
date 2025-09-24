@@ -7,36 +7,34 @@ on:
   workflow_dispatch:
   
 jobs:
-  create-release:
-    runs-on: ubuntu-latest
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-    steps:
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: 'Release ${{ github.ref }}'
-          body: 'See the assets below for the latest builds.'
-          draft: true # Создаем как черновик, чтобы можно было отредактировать перед публикацией
-          prerelease: false
-
-  build-tauri:
-    needs: create-release
+  publish-tauri:
+    # Разрешения, необходимые для загрузки артефактов в релиз
+    permissions:
+      contents: write
+      
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, ubuntu-latest, windows-latest]
+        include:
+          # Собираем для macOS на Apple Silicon (M1/M2/M3)
+          - platform: 'macos-latest'
+            args: '--target aarch64-apple-darwin'
+          # Собираем для macOS на Intel
+          - platform: 'macos-latest'
+            args: '--target x86_64-apple-darwin'
+          # Собираем для Linux
+          - platform: 'ubuntu-22.04'
+            args: ''
+          # Собираем для Windows
+          - platform: 'windows-latest'
+            args: ''
 
     runs-on: ${{ matrix.platform }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20 # Укажи свою версию Node.js
@@ -48,19 +46,48 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          # Добавляем цели для кросс-компиляции на macOS
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-      - name: Install dependencies (Linux)
-        if: matrix.platform == 'ubuntu-latest'
+      - name: Install dependencies (Ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+        # Примечание: webkitgtk 4.0 для Tauri v1, 4.1 для Tauri v2. Можешь удалить ненужное.
 
       - name: Install frontend dependencies
-        run: pnpm install
+        # Убедись, что команда соответствует твоему менеджеру пакетов
+        run: pnpm install --frozen-lockfile
 
-      - name: Build Tauri app
+      - name: Build and release
+        # Используем официальный tauri-action
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Если ты настроишь ключи для подписи, раскомментируй и добавь эти секреты
+          # TAURI_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
+          # TAURI_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
         with:
-          releaseId: ${{ needs.create-release.outputs.id }}
+          # --- Настройки релиза ---
+          # Имя тега. `__VERSION__` будет автоматически заменено на версию из tauri.conf.json
+          # Например: app-v0.1.0
+          tagName: 'v__VERSION__'
+          
+          # Название релиза.
+          # Например: VN Launcher v0.1.0
+          releaseName: 'VN Launcher v__VERSION__'
+          
+          # Описание релиза.
+          releaseBody: 'Новая версия лаунчера. Скачайте установщик для вашей ОС ниже.'
+          
+          # Создавать как черновик, чтобы можно было отредактировать перед публикацией.
+          releaseDraft: true
+          
+          # Отметить как пре-релиз.
+          prerelease: false
+
+          # --- Настройки сборки ---
+          # Передаем аргументы для кросс-компиляции на macOS.
+          args: ${{ matrix.args }}
