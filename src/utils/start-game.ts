@@ -8,7 +8,8 @@ export const callLaunchGameCommand = async (
   removeSession: (path: string) => void,
 ) => {
     try {
-      const command = Command.create("exec-game-use", ["/C", "start", gamePath]);
+      const command = Command.create("exec-game-use", ["/C", "start", "", `${gamePath}`]);
+      console.log(command)
       const startTime = Date.now();
 
       command.on("close", () => {
@@ -19,18 +20,16 @@ export const callLaunchGameCommand = async (
           .then(() => console.log('Время игры обновлено.'))
           .catch(err => console.error('Ошибка обновления времени:', err));
         
-        // Удаляем сессию, когда игра закрылась
         removeSession(gamePath);
       });
   
       command.on("error", (err) => {
         console.error("Ошибка запуска:", err);
-        removeSession(gamePath); // Также удаляем сессию в случае ошибки запуска
+        removeSession(gamePath);
       });
 
       const child = await command.spawn();
       
-      // Добавляем сессию с PID, когда игра успешно запустилась
       addSession(gamePath, child.pid);
       console.log(`Процесс для "${gamePath}" запущен с PID: ${child.pid}.`);
 

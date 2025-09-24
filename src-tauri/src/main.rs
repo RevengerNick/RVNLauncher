@@ -275,6 +275,9 @@ fn main() {
             database::db_remove_game_from_folder,
             database::db_get_games_by_folder,
             database::db_get_folders_for_game,
+            database::db_delete_game,
+            database::db_get_setting,
+            database::db_set_setting,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

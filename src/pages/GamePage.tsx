@@ -31,21 +31,18 @@ function GamePage() {
   }
   
   if (!game) {
-    // Это состояние должно быть обработано в useGameDetails, если игра не найдена
     return <div>Игра не найдена.</div>;
   }
 
-  // Функция для удаления игры (можно добавить в GameHeader или отдельную кнопку)
   const handleDeleteGame = async (gamePath: string) => {
     if (window.confirm('Вы уверены, что хотите удалить эту игру из библиотеки?')) {
-      await deleteGame(gamePath); // Вызываем команду удаления из БД
-      navigate('/'); // Перенаправляем на главную страницу после удаления
+      await deleteGame(gamePath); 
+      navigate('/'); 
     }
   };
 
   return (
     <div>
-      {/* Заголовок с иконкой, названием, рейтингом и кнопками скрытия/удаления */}
       <GameHeader
         game={game}
         iconDataUrl={iconDataUrl}
@@ -53,10 +50,9 @@ function GamePage() {
         onRatingChange={handleRatingChange}
         onNameChange={saveName}
         onToggleHidden={handleToggleHidden}
-        onDeleteGame={handleDeleteGame} // Передаем функцию удаления
+        onDeleteGame={handleDeleteGame}
       />
       
-      {/* Кнопки действий: Играть, Управление папками, Открыть папку */}
       <GameActions
         gamePath={game.path}
         onOpenFolder={handleOpenFolder}
@@ -64,14 +60,12 @@ function GamePage() {
         onFoldersChange={setGameFolderIds}
       />
 
-      {/* Блок с описанием и версией */}
       <GameMetadata 
         game={game}
         onDescriptionChange={saveDescription}
         onVersionChange={saveVersion}
       />
 
-      {/* Блок управления сохранениями */}
       <GameSavesManager game={game} />
     </div>
   );

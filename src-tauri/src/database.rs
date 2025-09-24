@@ -75,6 +75,24 @@ pub fn init(app_handle: &AppHandle) {
         [],
     ).expect("Failed to create game_folders table");
 
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL
+        )",
+        [],
+    ).expect("Failed to create settings table");
+    
+    // --- Инициализация настроек по умолчанию ---
+    // Вставляем значения, только если их еще нет
+    conn.execute(
+        "INSERT OR IGNORE INTO settings (key, value) VALUES (?1, ?2)",
+        ("gridSize", "medium"), // small, medium, large
+    ).expect("Failed to insert default settings");
+    conn.execute(
+        "INSERT OR IGNORE INTO settings (key, value) VALUES (?1, ?2)",
+        ("theme", "dark"), // dark, light
+    ).expect("Failed to insert default settings");
     *DB.lock().unwrap() = Some(conn);
     println!("Database initialized at: {:?}", db_path);
 }
@@ -300,5 +318,40 @@ pub fn db_get_folders_for_game(game_path: String) -> Result<Vec<i64>, String> {
             ids.push(id.unwrap());
         }
         Ok(ids)
+    })
+}
+
+#[tauri::command]
+pub fn db_delete_game(path: String) -> Result<(), String> {
+    with_db(|conn| {
+        conn.execute("DELETE FROM games WHERE path = ?1", [path.clone()])?;
+        // Также удаляем игру из всех папок, если она там была
+        conn.execute("DELETE FROM game_folders WHERE game_path = ?1", [path.clone()])?;
+        Ok(())
+    })
+}
+
+#[tauri::command]
+pub fn db_get_setting(key: String) -> Result<Option<String>, String> {
+    with_db(|conn| {
+        let mut stmt = conn.prepare("SELECT value FROM settings WHERE key = ?1")?;
+        let mut rows = stmt.query_map([key], |row| row.get(0))?;
+        if let Some(value_result) = rows.next() {
+            Ok(Some(value_result.unwrap()))
+        } else {
+            Ok(None)
+        }
+    })
+}
+
+#[tauri::command]
+pub fn db_set_setting(key: String, value: String) -> Result<(), String> {
+    with_db(|conn| {
+        // INSERT OR REPLACE обновит значение, если ключ существует, или создаст новое
+        conn.execute(
+            "INSERT OR REPLACE INTO settings (key, value) VALUES (?1, ?2)",
+            (key, value),
+        )?;
+        Ok(())
     })
 }

@@ -9,24 +9,23 @@
     "core:default",
     "opener:default",
     "shell:default",
-    {
-      "identifier": "shell:allow-spawn",
-      "allow": [
-        {
-          "name": "exec-game-use",
-          "cmd": "cmd.exe",
-          "args": [
-            "/C",
-            "start",
-            {
-              "validator": ".*"
-            }
-          ],
-          "sidecar": false
-        }
-      ]
-    },
-    {
+      {
+        "identifier": "shell:allow-spawn",
+        "allow": [
+          {
+            "name": "exec-game-use",
+            "cmd": "cmd.exe",
+            "args": [
+              "/C",
+              "start",
+              "",
+              { "validator": ".*" }
+            ],
+            "sidecar": false
+          }
+        ]
+      },
+      {
       "identifier": "fs:allow-read-dir",
       "scope": {
         "allow": ["**"]

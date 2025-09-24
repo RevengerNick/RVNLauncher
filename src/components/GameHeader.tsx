@@ -11,16 +11,15 @@ interface GameHeaderProps {
   onRatingChange: (rating: number) => void;
   onNameChange: (name: string) => void;
   onToggleHidden: () => void;
-  onDeleteGame?: (gamePath: string) => void; // Опциональная функция удаления
+  onDeleteGame?: (gamePath: string) => void; 
 }
 
 export function GameHeader({ game, iconDataUrl, onIconChange, onRatingChange, onNameChange, onToggleHidden, onDeleteGame }: GameHeaderProps) {
   const debouncedSaveName = useDebouncedCallback(onNameChange, 1000);
   
   return (
-    <div className="flex items-start gap-6 mb-8"> {/* Изменил items-center на items-start */}
-      {/* Блок для иконки */}
-      <div className="w-40 h-56 bg-gray-700 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden group relative">
+    <div className="flex items-start gap-6 mb-8"> 
+      <div className="w-90 h-56 bg-gray-700 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden group relative">
         {iconDataUrl ? ( 
           <img src={iconDataUrl} alt={game.name} className="w-full h-full object-cover" /> 
         ) : ( 
@@ -31,11 +30,10 @@ export function GameHeader({ game, iconDataUrl, onIconChange, onRatingChange, on
         </button>
       </div>
 
-      {/* Блок с метаданными и кнопками */}
-      <div className="flex-1"> {/* Занимает оставшееся пространство */}
+      <div className="flex-1"> 
         <input 
           type="text" 
-          defaultValue={formatGameName(game.name)} // Используем форматтер
+          defaultValue={formatGameName(game.name)} 
           className="text-5xl font-bold bg-transparent focus:bg-gray-800 rounded px-2 -mx-2 outline-none focus:ring-2 focus:ring-blue-500" 
           onChange={(e) => debouncedSaveName(e.target.value)} 
         />

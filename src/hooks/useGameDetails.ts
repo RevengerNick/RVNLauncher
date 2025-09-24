@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { GameEntry, getAllGamesFromDb, getFoldersForGame, toggleGameHidden, updateGameDescription, updateGameIcon, updateGameName, updateGameRating, updateGameVersion } from '../utils/db';
-import { selectIconFile, saveIconForGame, getIconAsDataUrl } from '../utils/icon-manager'; // Изменил getIconUrl на getIconAsDataUrl
+import { selectIconFile, saveIconForGame, getIconUrl } from '../utils/icon-manager'; // Изменил getIconUrl на getIconAsDataUrl
 import { useDebouncedCallback } from 'use-debounce';
 import { revealItemInDir } from '@tauri-apps/plugin-opener'; // Добавил импорт
 
@@ -50,7 +50,7 @@ export function useGameDetails() {
     let cancelled = false;
     const loadIcon = async () => {
       if (game?.icon_path) {
-        const url = await getIconAsDataUrl(game.icon_path); // Используем getIconAsDataUrl
+        const url = await getIconUrl(game.icon_path); 
         if (!cancelled) setIconDataUrl(url);
       } else {
         setIconDataUrl(null);
@@ -58,9 +58,7 @@ export function useGameDetails() {
     };
     loadIcon();
     return () => { cancelled = true; };
-  }, [game?.icon_path]); // Перезагружаем иконку, если path к ней изменился
-
-  // --- Функции-обработчики ---
+  }, [game?.icon_path]); 
 
   const handleSetIcon = useCallback(async () => {
     if (!game) return;
@@ -70,7 +68,6 @@ export function useGameDetails() {
       try {
         const newIconPath = await saveIconForGame(selectedFile, game.path);
         await updateGameIcon(game.path, newIconPath);
-        // Обновляем game объект, чтобы useEffect для иконки сработал
         setGame(prevGame => prevGame ? { ...prevGame, icon_path: newIconPath } : null);
       } catch (error) {
         console.error("Не удалось сохранить иконку:", error);
@@ -81,7 +78,6 @@ export function useGameDetails() {
   const handleRatingChange = useCallback(async (newRating: number) => {
     if (game && game.rating !== newRating) {
       await updateGameRating(game.path, newRating);
-      // Обновляем game объект, чтобы UI обновился
       setGame(prevGame => prevGame ? { ...prevGame, rating: newRating } : null);
     }
   }, [game]);
@@ -89,14 +85,13 @@ export function useGameDetails() {
   const handleToggleHidden = useCallback(async () => {
     if (game) {
       await toggleGameHidden(game.path, !game.is_hidden);
-      // Обновляем game объект
       setGame(prevGame => prevGame ? { ...prevGame, is_hidden: !prevGame.is_hidden } : null);
     }
   }, [game]);
 
   const handleOpenFolder = useCallback(() => {
     if (game) {
-      revealItemInDir(game.path); // Открытие папки с игрой
+      revealItemInDir(game.path); 
     }
   }, [game]);
 

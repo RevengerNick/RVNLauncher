@@ -1,6 +1,7 @@
 import { Outlet, NavLink } from 'react-router-dom';
 import { useFolders } from '../hooks/useFolders'; // Используем наш хук
 
+
 function Layout() {
   const { folders, addFolder } = useFolders(); // Получаем папки и функцию добавления
 
@@ -14,7 +15,7 @@ function Layout() {
   return (
     <div className="flex h-screen bg-gray-900 text-white">
       <aside className="w-64 bg-gray-800 p-4 flex flex-col">
-        <h1 className="text-2xl font-bold mb-8">VN Launcher</h1>
+        <h1 className="text-2xl font-bold mb-8">RVN Launcher</h1>
         <nav className="flex-1">
           <p className="px-4 text-sm text-gray-400 font-semibold mb-2">Библиотека</p>
           <ul>

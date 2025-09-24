@@ -80,6 +80,13 @@ export async function getFoldersForGame(gamePath: string): Promise<number[]> {
 }
 
 export async function deleteGame(gamePath: string): Promise<void> {
-    console.log(gamePath);
-    //await invoke('db_delete_game', { gamePath });
+    await invoke('db_delete_game', { gamePath });
+}
+
+export async function getSetting(key: string): Promise<string | null> {
+    return await invoke('db_get_setting', { key });
+}
+
+export async function setSetting(key: string, value: string): Promise<void> {
+    await invoke('db_set_setting', { key, value });
 }
