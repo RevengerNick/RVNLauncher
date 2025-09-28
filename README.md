@@ -1,6 +1,6 @@
-# VN Launcher
+# RVN Launcher
 
-![Скриншот вашего лаунчера](ссылка_на_скриншот.png)
+![Скриншот лаунчера](image.png)
 
 A lightweight, cross-platform launcher for your visual novel collection, built with Tauri and React.
 
@@ -18,7 +18,7 @@ A lightweight, cross-platform launcher for your visual novel collection, built w
 
 ## Installation
 
-1.  Go to the [**Latest Release**](https://github.com/твой-ник/имя-репозитория/releases/latest) page.
+1.  Go to the [**Latest Release**](https://github.com/RevengerNick/RVNLauncher/releases/latest) page.
 2.  Download the appropriate installer for your operating system:
     -   **Windows:** `_x64-setup.exe` or `.msi`
     -   **macOS:** `.dmg`
@@ -31,8 +31,8 @@ To run the project in development mode:
 
 ```bash
 # Clone the repository
-git clone https://github.com/твой-ник/имя-репозитория.git
-cd имя-репозитория
+git clone https://github.com/RevengerNick/RVNLauncher.git
+cd RVNLauncher
 
 # Install dependencies
 pnpm install
