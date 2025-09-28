@@ -12,6 +12,7 @@ export interface GameEntry {
     last_played?: string;
     rating: number;
     is_hidden: boolean;
+    completion_percent: number;
 }
 
 export interface Folder {
@@ -89,4 +90,8 @@ export async function getSetting(key: string): Promise<string | null> {
 
 export async function setSetting(key: string, value: string): Promise<void> {
     await invoke('db_set_setting', { key, value });
+}
+
+export async function updateGameCompletion(path: string, percent: number): Promise<void> {
+    await invoke('db_update_game_completion', { path, percent });
 }

@@ -29,6 +29,7 @@ function LibraryHeader({ title, onScanComplete }: LibraryHeaderProps) {
                     description: '',
                     icon_path: '',
                     last_played: '',
+                    completion_percent: 0,
                 };
                 await addGameToDb(newGameEntry);
             }

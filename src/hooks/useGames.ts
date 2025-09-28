@@ -3,7 +3,7 @@ import { GameEntry, getAllGamesFromDb, getGamesByFolder } from '../utils/db';
 
 interface UseGamesOptions {
   folderId?: number;
-  sortBy?: 'rating' | 'name' | 'playtime';
+  sortBy?: 'rating' | 'name' | 'playtime' | 'completion_percent';
   showHidden?: boolean;
 }
 

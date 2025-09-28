@@ -12,7 +12,7 @@ export function GameMetadata({ game, onDescriptionChange, onVersionChange }: Gam
   const debouncedSaveVersion = useDebouncedCallback(onVersionChange, 1000);
 
   return (
-    <div className="mt-8">
+    <div className="mt-8 space-y-6">
       {/* Описание */}
       <div>
         <h2 className="text-2xl font-bold mb-2">Описание</h2>

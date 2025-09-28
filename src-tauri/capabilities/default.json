@@ -9,26 +9,30 @@
     "core:default",
     "opener:default",
     "shell:default",
-      {
-        "identifier": "shell:allow-spawn",
-        "allow": [
-          {
-            "name": "exec-game-use",
-            "cmd": "cmd.exe",
-            "args": [
-              "/C",
-              "start",
-              "",
-              { "validator": ".*" }
-            ],
-            "sidecar": false
-          }
-        ]
-      },
-      {
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "exec-game-use",
+          "cmd": "cmd.exe",
+          "args": [
+            "/C",
+            "start",
+            "",
+            {
+              "validator": ".*"
+            }
+          ],
+          "sidecar": false
+        }
+      ]
+    },
+    {
       "identifier": "fs:allow-read-dir",
       "scope": {
-        "allow": ["**"]
+        "allow": [
+          "**"
+        ]
       }
     },
     {
@@ -36,11 +40,11 @@
       "scope": {
         "allow": [
           {
-            "path": "**", 
+            "path": "**",
             "baseDir": "Any"
           },
           {
-            "path": "$APPDATA/**", 
+            "path": "$APPDATA/**",
             "baseDir": "Any"
           }
         ]
@@ -49,7 +53,9 @@
     {
       "identifier": "fs:allow-mkdir",
       "scope": {
-        "allow": ["$APPDATA/icons"]
+        "allow": [
+          "$APPDATA/icons"
+        ]
       }
     },
     "fs:allow-create",
@@ -57,19 +63,41 @@
     "dialog:default",
     "fs:default",
     {
+      "identifier": "clipboard-manager:default",
+      "allow": [
+        "clipboard-manager:allow-read-image"
+      ]
+    },
+    {
       "identifier": "fs:allow-write-text-file",
       "scope": {
-        "allow": ["$APPDATA/*"]
-      }
-    },{
-      "identifier": "opener:allow-open-path",
-      "scope": {
         "allow": [
-          { "path": "$APPDATA/backups" },
-          { "path": "$APPDATA/backups/*" }
+          "$APPDATA/*"
         ]
       }
     },
-    "os:default"
+    {
+      "identifier": "opener:allow-open-path",
+      "scope": {
+        "allow": [
+          {
+            "path": "$APPDATA/backups"
+          },
+          {
+            "path": "$APPDATA/backups/*"
+          }
+        ]
+      }
+    },
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        {
+          "path": "/**"
+        }
+      ]
+    },
+    "os:default",
+    "clipboard-manager:allow-read-image"
   ]
 }

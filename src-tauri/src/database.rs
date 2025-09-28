@@ -1,9 +1,9 @@
+use once_cell::sync::Lazy;
 use rusqlite::{Connection, Result};
 use std::sync::Mutex;
-use once_cell::sync::Lazy;
 // <--- ВАЖНОЕ ИЗМЕНЕНИЕ ЗДЕСЬ: импортируем AppHandle и Manager
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
-use serde::{Serialize, Deserialize};
 
 // Глобальная, потокобезопасная ссылка на подключение к БД
 static DB: Lazy<Mutex<Option<Connection>>> = Lazy::new(|| Mutex::new(None));
@@ -20,6 +20,7 @@ pub struct GameEntry {
     pub last_played: Option<String>,
     pub rating: i32,
     pub is_hidden: bool,
+    pub completion_percent: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -31,7 +32,10 @@ pub struct Folder {
 // Функция для инициализации БД
 pub fn init(app_handle: &AppHandle) {
     // Теперь app_handle.path() будет работать, так как мы импортировали Manager
-    let app_dir = app_handle.path().app_data_dir().expect("Failed to get app data dir");
+    let app_dir = app_handle
+        .path()
+        .app_data_dir()
+        .expect("Failed to get app data dir");
     if !app_dir.exists() {
         std::fs::create_dir_all(&app_dir).expect("Failed to create app data dir");
     }
@@ -50,11 +54,12 @@ pub fn init(app_handle: &AppHandle) {
             version TEXT,
             last_played TEXT,
             rating INTEGER DEFAULT 0,
-            is_hidden BOOLEAN DEFAULT FALSE
+            is_hidden BOOLEAN DEFAULT FALSE,
+            completion_percent INTEGER DEFAULT 0
         )",
-        
         [],
-    ).expect("Failed to create table");
+    )
+    .expect("Failed to create table");
 
     conn.execute(
         "CREATE TABLE IF NOT EXISTS folders (
@@ -62,7 +67,8 @@ pub fn init(app_handle: &AppHandle) {
         name TEXT NOT NULL UNIQUE
     )",
         [],
-    ).expect("Failed to create table");
+    )
+    .expect("Failed to create table");
 
     conn.execute(
         "CREATE TABLE IF NOT EXISTS game_folders (
@@ -73,7 +79,8 @@ pub fn init(app_handle: &AppHandle) {
             PRIMARY KEY (game_path, folder_id)
         )",
         [],
-    ).expect("Failed to create game_folders table");
+    )
+    .expect("Failed to create game_folders table");
 
     conn.execute(
         "CREATE TABLE IF NOT EXISTS settings (
@@ -81,18 +88,21 @@ pub fn init(app_handle: &AppHandle) {
             value TEXT NOT NULL
         )",
         [],
-    ).expect("Failed to create settings table");
-    
+    )
+    .expect("Failed to create settings table");
+
     // --- Инициализация настроек по умолчанию ---
     // Вставляем значения, только если их еще нет
     conn.execute(
         "INSERT OR IGNORE INTO settings (key, value) VALUES (?1, ?2)",
         ("gridSize", "medium"), // small, medium, large
-    ).expect("Failed to insert default settings");
+    )
+    .expect("Failed to insert default settings");
     conn.execute(
         "INSERT OR IGNORE INTO settings (key, value) VALUES (?1, ?2)",
         ("theme", "dark"), // dark, light
-    ).expect("Failed to insert default settings");
+    )
+    .expect("Failed to insert default settings");
     *DB.lock().unwrap() = Some(conn);
     println!("Database initialized at: {:?}", db_path);
 }
@@ -110,7 +120,6 @@ where
     }
 }
 
-
 #[tauri::command]
 pub fn db_get_all_games() -> Result<Vec<GameEntry>, String> {
     with_db(|conn| {
@@ -127,6 +136,7 @@ pub fn db_get_all_games() -> Result<Vec<GameEntry>, String> {
                 last_played: row.get(7)?,
                 rating: row.get(8)?,
                 is_hidden: row.get(9)?,
+                completion_percent: row.get(10)?,
             })
         })?;
 
@@ -206,7 +216,6 @@ pub fn db_add_game(game: GameEntry) -> Result<(), String> {
     })
 }
 
-
 #[tauri::command]
 pub fn db_update_game_version(path: String, version: String) -> Result<(), String> {
     with_db(|conn| {
@@ -244,7 +253,7 @@ pub fn db_get_all_folders() -> Result<Vec<Folder>, String> {
                 name: row.get(1)?,
             })
         })?;
-        
+
         let mut folders = Vec::new();
         for folder in folder_iter {
             folders.push(folder.unwrap());
@@ -281,7 +290,7 @@ pub fn db_get_games_by_folder(folder_id: i64) -> Result<Vec<GameEntry>, String> 
         let mut stmt = conn.prepare(
             "SELECT g.* FROM games g
              JOIN game_folders gf ON g.path = gf.game_path
-             WHERE gf.folder_id = ?1"
+             WHERE gf.folder_id = ?1",
         )?;
         let game_iter = stmt.query_map([folder_id], |row| {
             Ok(GameEntry {
@@ -295,6 +304,7 @@ pub fn db_get_games_by_folder(folder_id: i64) -> Result<Vec<GameEntry>, String> 
                 last_played: row.get(7)?,
                 rating: row.get(8)?,
                 is_hidden: row.get(9)?,
+                completion_percent: row.get(10)?,
             })
         })?;
 
@@ -312,7 +322,7 @@ pub fn db_get_folders_for_game(game_path: String) -> Result<Vec<i64>, String> {
     with_db(|conn| {
         let mut stmt = conn.prepare("SELECT folder_id FROM game_folders WHERE game_path = ?1")?;
         let ids_iter = stmt.query_map([game_path], |row| row.get(0))?;
-        
+
         let mut ids = Vec::new();
         for id in ids_iter {
             ids.push(id.unwrap());
@@ -326,7 +336,10 @@ pub fn db_delete_game(path: String) -> Result<(), String> {
     with_db(|conn| {
         conn.execute("DELETE FROM games WHERE path = ?1", [path.clone()])?;
         // Также удаляем игру из всех папок, если она там была
-        conn.execute("DELETE FROM game_folders WHERE game_path = ?1", [path.clone()])?;
+        conn.execute(
+            "DELETE FROM game_folders WHERE game_path = ?1",
+            [path.clone()],
+        )?;
         Ok(())
     })
 }
@@ -351,6 +364,17 @@ pub fn db_set_setting(key: String, value: String) -> Result<(), String> {
         conn.execute(
             "INSERT OR REPLACE INTO settings (key, value) VALUES (?1, ?2)",
             (key, value),
+        )?;
+        Ok(())
+    })
+}
+
+#[tauri::command]
+pub fn db_update_game_completion(path: String, percent: i32) -> Result<(), String> {
+    with_db(|conn| {
+        conn.execute(
+            "UPDATE games SET completion_percent = ?2 WHERE path = ?1",
+            (path, percent),
         )?;
         Ok(())
     })

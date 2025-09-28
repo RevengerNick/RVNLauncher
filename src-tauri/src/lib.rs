@@ -12,7 +12,6 @@
 //     game_type: String,
 // }
 
-
 // fn is_in_blacklist(entry: &DirEntry, dir_blacklist: &[String]) -> bool {
 //     if let Some(file_name) = entry.file_name().to_str() {
 //         return dir_blacklist.contains(&file_name.to_lowercase());
@@ -33,7 +32,7 @@
 //     dir_blacklist: Vec<String>,
 //     file_blacklist: Vec<String>,
 // ) -> Result<Vec<GameInfo>, String> {
-    
+
 //     let mut potential_games_by_dir: HashMap<String, Vec<GameInfo>> = HashMap::new();
 //     let executable_extensions = ["exe", "py", "sh", "bat", "cmd"];
 
@@ -53,7 +52,7 @@
 //                     if file_blacklist.contains(&file_name.to_lowercase()) {
 //                         continue;
 //                     }
-                    
+
 //                     let full_path = entry.path().to_string_lossy().to_string();
 //                     if let Some(parent) = entry.path().parent() {
 //                         let parent_dir = parent.to_string_lossy().to_string();
@@ -83,7 +82,7 @@
 //                 .unwrap_or(&game.name)
 //                 .trim_end_matches("-32")
 //                 .to_lowercase();
-            
+
 //             game_groups.entry(base_name).or_default().push(game);
 //         }
 
@@ -108,7 +107,6 @@
 
 //     Ok(final_games)
 // }
-
 
 // #[cfg_attr(mobile, tauri::mobile_entry_point)]
 // pub fn run() {

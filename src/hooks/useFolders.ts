@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Folder, getAllFolders, createFolder } from '../utils/db';
+import { toast } from 'react-hot-toast';
 
 export function useFolders() {
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -27,7 +28,7 @@ export function useFolders() {
       await fetchFolders(); // Перезагружаем список после добавления
     } catch (e) {
       console.error(e);
-      alert('Папка с таким именем уже существует!');
+      toast.error('Папка с таким именем уже существует!');
     }
   }, [fetchFolders]);
 

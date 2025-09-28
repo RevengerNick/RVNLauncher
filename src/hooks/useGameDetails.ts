@@ -4,6 +4,8 @@ import { GameEntry, getAllGamesFromDb, getFoldersForGame, toggleGameHidden, upda
 import { selectIconFile, saveIconForGame, getIconUrl } from '../utils/icon-manager'; // Изменил getIconUrl на getIconAsDataUrl
 import { useDebouncedCallback } from 'use-debounce';
 import { revealItemInDir } from '@tauri-apps/plugin-opener'; // Добавил импорт
+import { invoke } from '@tauri-apps/api/core';
+import toast from 'react-hot-toast';
 
 export function useGameDetails() {
   const { gamePath } = useParams<{ gamePath: string }>();
@@ -122,6 +124,21 @@ export function useGameDetails() {
     }
   }, 1000);
 
+  const handlePasteIcon = async () => {
+    if (!game) return;
+    try {
+      // Вызываем нашу новую Rust-команду
+      const newIconPath = await invoke<string>('save_image_from_clipboard', { gamePath: game.path });
+      // Обновляем иконку в БД и в состоянии
+      await updateGameIcon(game.path, newIconPath);
+      setGame({ ...game, icon_path: newIconPath });
+      toast.success('Иконка из буфера обмена успешно установлена!');
+    } catch (error) {
+      console.error("Ошибка вставки иконки:", error);
+      toast.error(`Ошибка: ${error}`);
+    }
+  };
+
   // Возвращаем все необходимые данные и функции
   return {
     game,
@@ -135,6 +152,7 @@ export function useGameDetails() {
     handleOpenFolder, // Для кнопки "Открыть папку"
     saveName,
     saveVersion,
-    saveDescription
+    saveDescription,
+    handlePasteIcon
   };
 }
