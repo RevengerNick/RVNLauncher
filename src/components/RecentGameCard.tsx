@@ -1,27 +1,34 @@
 import { Link } from 'react-router-dom';
 import { GameEntry } from '../utils/db';
 import { formatGameName, formatPlaytime } from '../utils/formatters';
-// ... (другие импорты, если нужны)
+import { generateGradientColors } from '../utils/gradient-generator';
+import { convertFileSrc } from '@tauri-apps/api/core';
+import StarRating from './StarRating';
 
 interface RecentGameCardProps {
   game: GameEntry;
   // iconDataUrl будет получен в родительском компоненте
-  iconDataUrl: string | null; 
+  iconDataUrl: string | undefined; 
 }
 
 export function RecentGameCard({ game, iconDataUrl }: RecentGameCardProps) {
   const encodedPath = encodeURIComponent(game.path);
   const progress = game.completion_percent || 0;
 
+  const { color1, color2 } = generateGradientColors(game.name);
+  const gradientStyle = {
+      backgroundImage: `linear-gradient(to top right, ${color1}, ${color2})`,
+  };
+
   return (
     <Link 
       to={`/game/${encodedPath}`} 
-      className="block bg-secondary rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300"
+      className="block bg-secondary rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:scale-110 transition-all duration-300"
     >
       {/* Фоновое изображение (баннер) */}
-      <div className="h-32 bg-gray-700 relative">
+      <div className="h-32 bg-gray-700 relative" style={gradientStyle}>
         {iconDataUrl && (
-          <img src={iconDataUrl} alt={game.name} className="w-full h-full object-cover opacity-60" />
+          <img src={convertFileSrc(iconDataUrl || '')} alt={game.name} className="w-full h-full object-cover opacity-60" />
         )}
       </div>
       
@@ -29,8 +36,9 @@ export function RecentGameCard({ game, iconDataUrl }: RecentGameCardProps) {
         <h3 className="font-bold text-xl text-text-primary truncate" title={formatGameName(game.name)}>
           {formatGameName(game.name)}
         </h3>
-        <p className="text-sm text-text-secondary mt-1">
+        <p className="flex justify-between text-sm text-text-secondary mt-1">
           Сыграно: {formatPlaytime(game.play_time_seconds)}
+          <StarRating rating={game.rating} starSize="smallMedium" />
         </p>
 
         {/* Прогресс-бар */}

@@ -20,6 +20,7 @@
     "@tauri-apps/plugin-opener": "~2",
     "@tauri-apps/plugin-os": "~2.3.1",
     "@tauri-apps/plugin-shell": "~2",
+    "framer-motion": "^12.23.22",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hot-toast": "^2.6.0",

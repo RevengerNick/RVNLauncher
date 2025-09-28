@@ -1,28 +1,59 @@
 import { Link } from 'react-router-dom';
 import { GameEntry } from '../utils/db';
 import { formatGameName } from '../utils/formatters';
-// ...
+import { generateGradientColors } from '../utils/gradient-generator';
+import StarRating from './StarRating';
+import { convertFileSrc } from '@tauri-apps/api/core';
 
 interface PosterGameCardProps {
   game: GameEntry;
-  iconDataUrl: string | null;
+  iconUrl: string | undefined;
 }
 
-export function PosterGameCard({ game, iconDataUrl }: PosterGameCardProps) {
+export function PosterGameCard({ game, iconUrl }: PosterGameCardProps) {
     const encodedPath = encodeURIComponent(game.path);
+    const { color1, color2 } = generateGradientColors(game.name);
+    const gradientStyle = {
+        backgroundImage: `linear-gradient(to top, black, ${color1}, ${color2}, transparent 95%)`,
+    };
+    console.log(iconUrl)
 
     return (
-        <Link to={`/game/${encodedPath}`} className="block relative aspect-[2/3] bg-secondary rounded-2xl overflow-hidden shadow-md group">
-            {iconDataUrl ? (
-                <img src={iconDataUrl} alt={game.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+        <Link to={`/game/${encodedPath}`} className="block relative aspect-[2/3] bg-secondary rounded-2xl overflow-hidden hover:scale-115 transition-all duration-200 shadow-md group">
+            {iconUrl ? (
+                <div>
+                    <img
+                        src={convertFileSrc(iconUrl || '')}
+                        alt={game.name}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        style={{
+                        WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,1)80%, rgba(0,0,0,0)95%)",
+                        WebkitMaskRepeat: "no-repeat",
+                        WebkitMaskSize: "100% 100%",
+                        maskImage: "linear-gradient(to top, rgba(0,0,0,1)80%, rgba(0,0,0,0)95%)",
+                        maskRepeat: "no-repeat",
+                        maskSize: "100% 100%",
+                        }}
+                    />
+                    <div className={`absolute inset-0 bg-gradient-to-t from-black/70  to-transparent`}></div>
+                </div>
             ) : (
-                <div className="w-full h-full flex items-center justify-center text-text-secondary">Нет постера</div>
+                <div className="h-1/2 flex items-center justify-center">
+                    <div className="w-full h-full flex items-center justify-center text-text-secondary">Нет постера</div>
+                    <div className={`absolute inset-0 `} style={gradientStyle}></div>
+                </div>
             )}
             {/* Градиент и название */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-            <h3 className="absolute bottom-4 left-4 right-4 font-bold text-white text-lg truncate">
-                {formatGameName(game.name)}
-            </h3>
+            
+            <div className="absolute bottom-4 left-4 right-4 font-bold text-white text-lg truncate">
+                <h3>{formatGameName(game.name)}</h3>
+                {game.rating > 0 && (
+                        <div className="mt-1">
+                            <StarRating rating={game.rating} starSize="small" />
+                        </div>
+                    )}
+                <p className="text-gray-400 text-xs">{game.version}</p>
+            </div>   
         </Link>
     );
 }

@@ -1,20 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { GameEntry, getAllGamesFromDb, getFoldersForGame, toggleGameHidden, updateGameDescription, updateGameIcon, updateGameName, updateGameRating, updateGameVersion } from '../utils/db';
 import { selectIconFile, saveIconForGame, getIconUrl } from '../utils/icon-manager'; // Изменил getIconUrl на getIconAsDataUrl
 import { useDebouncedCallback } from 'use-debounce';
 import { revealItemInDir } from '@tauri-apps/plugin-opener'; // Добавил импорт
-import { invoke } from '@tauri-apps/api/core';
+import { convertFileSrc, invoke } from '@tauri-apps/api/core';
 import toast from 'react-hot-toast';
+import { getImageDimensions } from '../utils/image';
 
-export function useGameDetails() {
-  const { gamePath } = useParams<{ gamePath: string }>();
+export function useGameDetails(gamePath: string | undefined) {
   const navigate = useNavigate();
 
   const [game, setGame] = useState<GameEntry | null>(null);
   const [gameFolderIds, setGameFolderIds] = useState<number[]>([]);
   const [iconDataUrl, setIconDataUrl] = useState<string | null>(null); // Изменил iconUrl на iconDataUrl
   const [loading, setLoading] = useState(true);
+  const [iconOrientation, setIconOrientation] = useState<'landscape' | 'portrait' | 'square'>('portrait');
 
   const decodedPath = gamePath ? decodeURIComponent(gamePath) : '';
 
@@ -46,6 +47,41 @@ export function useGameDetails() {
     };
     loadData();
   }, [decodedPath, navigate]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadIcon = async () => {
+      if (game?.icon_path) {
+        // Здесь мы используем getIconAsDataUrl, так как он нужен для определения размеров
+        const url = await convertFileSrc(game.icon_url || ''); 
+        if (url && !cancelled) {
+          setIconDataUrl(url);
+          try {
+            const dims = await getImageDimensions(url);
+            if (!cancelled) setIconOrientation(dims.orientation);
+          } catch (e) {
+            if (!cancelled) setIconOrientation('portrait'); // По умолчанию, если ошибка
+          }
+        }
+      } else {
+        if (!cancelled) {
+          setIconDataUrl(null);
+          setIconOrientation('portrait'); // Сбрасываем к значению по умолчанию
+        }
+      }
+    };
+    loadIcon();
+    return () => { cancelled = true; };
+  }, [game?.icon_path]);
+
+  const handleDeleteIcon = useCallback(async () => {
+    if (game && window.confirm("Удалить обложку для этой игры?")) {
+      // Мы просто удаляем путь к иконке из БД. Сам файл останется,
+      // но его можно будет периодически чистить (это уже другая фича).
+      await updateGameIcon(game.path, ''); // Сохраняем пустую строку
+      setGame(prevGame => prevGame ? { ...prevGame, icon_path: '' } : null);
+    }
+  }, [game]);
 
   // --- Загрузка иконки (Data URL) ---
   useEffect(() => {
@@ -144,6 +180,7 @@ export function useGameDetails() {
     game,
     loading,
     iconDataUrl, // Изменено
+    iconOrientation,
     gameFolderIds,
     setGameFolderIds, // Функция для обновления папок из GameFolderManager
     handleSetIcon,
@@ -153,6 +190,7 @@ export function useGameDetails() {
     saveName,
     saveVersion,
     saveDescription,
-    handlePasteIcon
+    handlePasteIcon,
+    handleDeleteIcon
   };
 }

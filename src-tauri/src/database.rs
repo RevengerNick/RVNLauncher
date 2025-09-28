@@ -15,6 +15,7 @@ pub struct GameEntry {
     pub game_type: String,
     pub play_time_seconds: i64,
     pub icon_path: Option<String>,
+    pub icon_url: Option<String>,
     pub description: Option<String>,
     pub version: Option<String>,
     pub last_played: Option<String>,
@@ -29,22 +30,34 @@ pub struct Folder {
     pub name: String,
 }
 
-// Функция для инициализации БД
 pub fn init(app_handle: &AppHandle) {
-    // Теперь app_handle.path() будет работать, так как мы импортировали Manager
-    let app_dir = app_handle
-        .path()
-        .app_data_dir()
-        .expect("Failed to get app data dir");
+    let app_dir = app_handle.path().app_data_dir().expect("Failed to get app data dir");
     if !app_dir.exists() {
         std::fs::create_dir_all(&app_dir).expect("Failed to create app data dir");
     }
     let db_path = app_dir.join("launcher.db");
 
     let conn = Connection::open(&db_path).expect("Failed to open database");
+    
+    // --- ЗАПУСК МИГРАЦИЙ ---
+    // Каждая функция миграции будет проверять, нужно ли ей работать.
+    // Это позволяет безопасно добавлять новые миграции в будущем.
+    migrate_v1_initial_tables(&conn).expect("V1 migration failed");
+    migrate_v2_add_completion_percent(&conn).expect("V2 migration failed");
+    // Когда понадобится новая миграция, просто добавишь сюда вызов:
+    // migrate_v3_add_tags_table(&conn).expect("V3 migration failed");
 
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS games (
+    *DB.lock().unwrap() = Some(conn);
+    println!("Database initialized and migrations applied at: {:?}", db_path);
+}
+
+// --- ФУНКЦИИ МИГРАЦИИ ---
+
+// Миграция v1: Создает все основные таблицы, если их нет.
+fn migrate_v1_initial_tables(conn: &Connection) -> Result<()> {
+    conn.execute_batch(
+        "BEGIN;
+        CREATE TABLE IF NOT EXISTS games (
             path TEXT PRIMARY KEY,
             name TEXT NOT NULL,
             game_type TEXT NOT NULL,
@@ -54,58 +67,56 @@ pub fn init(app_handle: &AppHandle) {
             version TEXT,
             last_played TEXT,
             rating INTEGER DEFAULT 0,
-            is_hidden BOOLEAN DEFAULT FALSE,
-            completion_percent INTEGER DEFAULT 0
-        )",
-        [],
-    )
-    .expect("Failed to create table");
-
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS folders (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL UNIQUE
-    )",
-        [],
-    )
-    .expect("Failed to create table");
-
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS game_folders (
+            is_hidden BOOLEAN DEFAULT FALSE
+        );
+        CREATE TABLE IF NOT EXISTS folders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE
+        );
+        CREATE TABLE IF NOT EXISTS game_folders (
             game_path TEXT NOT NULL,
             folder_id INTEGER NOT NULL,
             FOREIGN KEY(game_path) REFERENCES games(path) ON DELETE CASCADE,
             FOREIGN KEY(folder_id) REFERENCES folders(id) ON DELETE CASCADE,
             PRIMARY KEY (game_path, folder_id)
-        )",
-        [],
-    )
-    .expect("Failed to create game_folders table");
-
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS settings (
+        );
+        CREATE TABLE IF NOT EXISTS settings (
             key TEXT PRIMARY KEY,
             value TEXT NOT NULL
-        )",
-        [],
-    )
-    .expect("Failed to create settings table");
-
-    // --- Инициализация настроек по умолчанию ---
-    // Вставляем значения, только если их еще нет
-    conn.execute(
-        "INSERT OR IGNORE INTO settings (key, value) VALUES (?1, ?2)",
-        ("gridSize", "medium"), // small, medium, large
-    )
-    .expect("Failed to insert default settings");
-    conn.execute(
-        "INSERT OR IGNORE INTO settings (key, value) VALUES (?1, ?2)",
-        ("theme", "dark"), // dark, light
-    )
-    .expect("Failed to insert default settings");
-    *DB.lock().unwrap() = Some(conn);
-    println!("Database initialized at: {:?}", db_path);
+        );
+        INSERT OR IGNORE INTO settings (key, value) VALUES ('gridSize', '4');
+        INSERT OR IGNORE INTO settings (key, value) VALUES ('theme', 'dark');
+        COMMIT;"
+    )?;
+    Ok(())
 }
+fn migrate_v2_add_completion_percent(conn: &Connection) -> Result<()> {
+    // Проверяем, существует ли колонка
+    let mut stmt = conn.prepare("PRAGMA table_info(games)")?;
+    let columns = stmt.query_map([], |row| row.get::<_, String>(1))?;
+    
+    let has_column = columns.filter_map(Result::ok).any(|col_name| col_name == "completion_percent");
+
+    if !has_column {
+        println!("Applying V2 migration: Adding 'completion_percent' column...");
+        conn.execute(
+            "ALTER TABLE games ADD COLUMN completion_percent INTEGER DEFAULT 0",
+            [],
+        )?;
+        println!("V2 migration applied successfully.");
+    }
+    Ok(())
+}
+
+// Пример будущей миграции
+// fn migrate_v3_add_tags_table(conn: &Connection) -> Result<()> {
+//     conn.execute_batch(
+//         "CREATE TABLE IF NOT EXISTS tags ( ... );
+//          CREATE TABLE IF NOT EXISTS game_tags ( ... );"
+//     )?;
+//     Ok(())
+// }
+
 
 // Вспомогательная функция для доступа к подключению
 fn with_db<F, T>(func: F) -> Result<T, String>
@@ -121,10 +132,21 @@ where
 }
 
 #[tauri::command]
-pub fn db_get_all_games() -> Result<Vec<GameEntry>, String> {
+pub fn db_get_games(app: AppHandle, folder_id: Option<i64>) -> Result<Vec<GameEntry>, String> {
+    let app_data_dir = app.path().app_data_dir().expect("Could not get app data dir");
+    
     with_db(|conn| {
-        let mut stmt = conn.prepare("SELECT * FROM games")?;
-        let game_iter = stmt.query_map([], |row| {
+        // --- Создаем замыкание (closure) для маппинга, чтобы не дублировать код ---
+        // `move` здесь нужно, чтобы замыкание стало "владельцем" `app_data_dir`
+        let map_row = move |row: &rusqlite::Row| {
+            let icon_path_opt: Option<String> = row.get(4)?;
+            
+            // Твоя логика для icon_url
+            // Мы клонируем app_data_dir, чтобы передать его в замыкание
+            let icon_url = icon_path_opt.map(|rel_path| {
+                app_data_dir.join(rel_path).to_string_lossy().into_owned()
+            });
+
             Ok(GameEntry {
                 path: row.get(0)?,
                 name: row.get(1)?,
@@ -137,16 +159,30 @@ pub fn db_get_all_games() -> Result<Vec<GameEntry>, String> {
                 rating: row.get(8)?,
                 is_hidden: row.get(9)?,
                 completion_percent: row.get(10)?,
+                icon_url,
             })
-        })?;
-
-        let mut games = Vec::new();
-        for game in game_iter {
-            games.push(game.unwrap());
+        };
+        // --- В зависимости от folder_id, выполняем разный код ---
+        if let Some(id) = folder_id {
+            // --- Логика для конкретной папки ---
+            let sql = "SELECT g.* FROM games g JOIN game_folders gf ON g.path = gf.game_path WHERE gf.folder_id = ?1";
+            let mut stmt = conn.prepare(sql)?;
+            let game_iter = stmt.query_map([id], map_row)?;
+            
+            // Собираем результаты в вектор
+            game_iter.collect::<Result<Vec<GameEntry>, _>>()
+        } else {
+            // --- Логика для всех игр ---
+            let sql = "SELECT * FROM games";
+            let mut stmt = conn.prepare(sql)?;
+            let game_iter = stmt.query_map([], map_row)?;
+            
+            // Собираем результаты в вектор
+            game_iter.collect::<Result<Vec<GameEntry>, _>>()
         }
-        Ok(games)
     })
 }
+
 
 #[tauri::command]
 pub fn db_update_game_playtime(path: String, session_seconds: i64) -> Result<(), String> {
@@ -281,38 +317,6 @@ pub fn db_remove_game_from_folder(game_path: String, folder_id: i64) -> Result<(
             (game_path, folder_id),
         )?;
         Ok(())
-    })
-}
-
-#[tauri::command]
-pub fn db_get_games_by_folder(folder_id: i64) -> Result<Vec<GameEntry>, String> {
-    with_db(|conn| {
-        let mut stmt = conn.prepare(
-            "SELECT g.* FROM games g
-             JOIN game_folders gf ON g.path = gf.game_path
-             WHERE gf.folder_id = ?1",
-        )?;
-        let game_iter = stmt.query_map([folder_id], |row| {
-            Ok(GameEntry {
-                path: row.get(0)?,
-                name: row.get(1)?,
-                game_type: row.get(2)?,
-                play_time_seconds: row.get(3)?,
-                icon_path: row.get(4)?,
-                description: row.get(5)?,
-                version: row.get(6)?,
-                last_played: row.get(7)?,
-                rating: row.get(8)?,
-                is_hidden: row.get(9)?,
-                completion_percent: row.get(10)?,
-            })
-        })?;
-
-        let mut games = Vec::new();
-        for game in game_iter {
-            games.push(game.unwrap());
-        }
-        Ok(games)
     })
 }
 

@@ -7,6 +7,7 @@ export interface GameEntry {
     game_type: string;
     play_time_seconds: number;
     icon_path?: string;
+    icon_url?: string;
     description?: string;
     version?: string;
     last_played?: string;
@@ -25,7 +26,7 @@ export async function addGameToDb(game: GameEntry): Promise<void> {
 }
 
 export async function getAllGamesFromDb(): Promise<GameEntry[]> {
-    return await invoke('db_get_all_games');
+    return await invoke('db_get_games');
 }
 
 export async function updateGameDescription(path: string, description: string): Promise<void> {
@@ -73,7 +74,7 @@ export async function removeGameFromFolder(gamePath: string, folderId: number): 
 }
 
 export async function getGamesByFolder(folderId: number): Promise<GameEntry[]> {
-    return await invoke('db_get_games_by_folder', { folderId });
+    return await invoke('db_get_games', { folderId });
 }
 
 export async function getFoldersForGame(gamePath: string): Promise<number[]> {

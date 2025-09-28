@@ -1,12 +1,14 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { useFolders } from '../hooks/useFolders'; // Используем наш хук
+import { useFolders } from '../hooks/useFolders';
+import { HomeIcon, FolderIcon, Cog6ToothIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftOnRectangleIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/20/solid';
 import { useState } from 'react';
-import { Bars3Icon, FolderIcon, HomeIcon, XMarkIcon } from '@heroicons/react/16/solid';
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from 'react-hot-toast'; // Для уведомлений
+import React from 'react';
 
 function Layout() {
-  const { folders, addFolder } = useFolders(); // Получаем папки и функцию добавления
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const { folders, addFolder } = useFolders();
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
 
   const handleCreateFolder = async () => {
     const name = prompt('Введите название новой папки:');
@@ -15,75 +17,64 @@ function Layout() {
     }
   };
 
+  const NavItem = ({ to, icon, children }: { to: string, icon: React.ElementType, children: React.ReactNode }) => (
+      <NavLink to={to} end className={({ isActive }) => `flex items-center gap-4 py-2 px-3 rounded-md text-sm font-medium transition-colors ${isActive ? 'bg-blue-500/80 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`}>
+        {React.createElement(icon, { className: "h-5 w-5 flex-shrink-0" })}
+        <span className={`transition-opacity duration-200 ${!isSidebarExpanded && 'opacity-0'}`}>{children}</span>
+      </NavLink>
+  );
+
   return (
-    <div className="flex h-screen bg-gray-900 text-white">
-      {/* --- САЙДБАР --- */}
+    // Основной фон теперь темный, как в референсе
+    <div className="flex h-screen bg-[#171122] text-white">
       <Toaster 
-        position="top-right" // Позиция
+        position="top-right"
         toastOptions={{
-          // Стили для темной темы
           className: 'bg-gray-700 text-white shadow-lg rounded-md',
-          style: {
-            background: '#374151', // bg-gray-700
-            color: '#F9FAFB',     // text-gray-50
-          },
-          // Стандартное время отображения
+          style: { background: '#1f2937', color: '#f9fafb' },
           duration: 4000,
         }}
       />
 
+      {/* Сайдбар (остается почти без изменений) */}
       <aside 
-        className={`
-          bg-gray-800 p-4 flex flex-col transition-all duration-300
-          ${isSidebarCollapsed ? 'w-20' : 'w-64'}
-        `}
+        className={`bg-gray-800 text-gray-200 flex flex-col transition-all duration-300 ease-in-out ${isSidebarExpanded ? 'w-48' : 'w-16'}`}
       >
-        {/* Верхняя часть с заголовком/кнопкой */}
-        <div className="flex items-center mb-8">
-          {!isSidebarCollapsed && <h1 className="text-2xl font-bold flex-1">RVN Launcher</h1>}
-          <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="p-1 rounded-full hover:bg-gray-700">
-            {isSidebarCollapsed ? <Bars3Icon className="size-12 p-2" /> : <XMarkIcon className="size-8" />}
-          </button>
+        <div className="flex items-center justify-center h-16 flex-shrink-0 px-4">
+          {/* Убрали текст RVN Launcher, можно добавить иконку-логотип */}
         </div>
-
-        {/* Навигация */}
-        <nav className="flex-1">
-          <p className={`px-2 text-sm text-gray-400 font-semibold mb-2 ${isSidebarCollapsed ? 'text-center' : ''}`}>
-            {!isSidebarCollapsed && 'Библиотека'}
-          </p>
-          <ul>
-            <li>
-              <NavLink to="/" end className={({ isActive }) => `flex items-center gap-4 py-2 px-2 rounded ${isActive ? 'bg-blue-500' : 'hover:bg-gray-700'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-                <HomeIcon className="h-6 w-6 flex-shrink-0" />
-                {!isSidebarCollapsed && <span>Все игры</span>}
-              </NavLink>
-            </li>
-          </ul>
-
-          <p className={`px-2 text-sm text-gray-400 font-semibold mt-6 mb-2 ${isSidebarCollapsed ? 'text-center' : ''}`}>
-             {!isSidebarCollapsed && 'Папки'}
-          </p>
-          <ul>
-            {folders.map(folder => (
-              <li key={folder.id}>
-                <NavLink to={`/folder/${folder.id}`} className={({ isActive }) => `flex items-center gap-4 py-2 px-2 rounded ${isActive ? 'bg-blue-500' : 'hover:bg-gray-700'} ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-                  <FolderIcon className="h-6 w-6 flex-shrink-0" />
-                  {!isSidebarCollapsed && <span className="truncate">{folder.name}</span>}
-                </NavLink>
-              </li>
-            ))}
-          </ul>
+        
+        <nav className="flex-1 px-2 space-y-1">
+          <NavItem to="/" icon={HomeIcon}>Библиотека</NavItem>
+          
+          {/* Папки теперь тоже как NavItem */}
+          {folders.map(folder => (
+            <NavItem key={folder.id} to={`/folder/${folder.id}`} icon={FolderIcon}>
+              {folder.name}
+            </NavItem>
+          ))}
+          
+          <button onClick={handleCreateFolder} className="flex items-center w-full gap-4 py-2 px-3 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white">
+            <div className="flex items-center gap-2">
+              <PlusIcon className="h-5 w-5" />
+              {isSidebarExpanded && <span className={`transition-opacity duration-200 opacity-100 whitespace-nowrap`}>Новая папка</span>}
+            </div>
+          </button>
         </nav>
 
-        {/* Кнопка создания папки */}
-        <button onClick={handleCreateFolder} className={`w-full flex items-center gap-4 font-bold py-2 px-4 rounded bg-green-600 hover:bg-green-700 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
-          <span className="text-2xl">+</span>
-          {!isSidebarCollapsed && <span>Новая папка</span>}
-        </button>
+        {/* Настройки и кнопка сворачивания */}
+        <div className="px-2 pb-4 space-y-1">
+          <NavItem to="/settings" icon={Cog6ToothIcon}>Настройки</NavItem>
+          <button onClick={() => setIsSidebarExpanded(!isSidebarExpanded)} className="flex items-center w-full gap-4 py-2 px-3 rounded-md text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white">
+            <div className="flex items-center gap-2">
+              {isSidebarExpanded ? <ArrowLeftOnRectangleIcon className="h-5 w-5" /> : <ArrowRightOnRectangleIcon className="h-5 w-5" />}
+              <span className={`transition-opacity duration-200 ${!isSidebarExpanded && 'opacity-0'}`}>Свернуть</span>
+            </div>
+          </button>
+        </div>
       </aside>
 
-      {/* --- ОСНОВНОЙ КОНТЕНТ --- */}
-      <main className="flex-1 p-8 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto">
         <Outlet />
       </main>
     </div>

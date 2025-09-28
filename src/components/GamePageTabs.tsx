@@ -28,7 +28,7 @@ export function GamePageTabs({ tabs }: GamePageTabsProps) {
                 <button
                   className={classNames(
                     'w-full rounded-lg py-2.5 text-sm font-medium leading-5',
-                    'focus:outline-none focus:ring-2 ring-offset-2 ring-offset-blue-400 ring-white ring-opacity-60',
+                    'focus:outline-none  ring-opacity-60',
                     selected
                       ? 'bg-blue-500 text-white shadow'
                       : 'text-blue-100 hover:bg-white/[0.12] hover:text-white'
