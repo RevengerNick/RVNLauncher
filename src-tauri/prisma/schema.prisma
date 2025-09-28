@@ -1,0 +1,48 @@
+generator client {
+  provider = "cargo prisma"
+  // Путь к сгенерированному файлу относительно корня воркспейса (src-tauri)
+  output   = "app/src/prisma.rs" 
+}
+
+datasource db {
+  provider = "sqlite"
+  // Путь к файлу БД относительно schema.prisma
+  url      = "file:./launcher.db" 
+}
+
+// --- МОДЕЛИ ДАННЫХ ---
+model Game {
+  path               String    @id
+  name               String
+  game_type          String
+  play_time_seconds  Int       @default(0)
+  icon_path          String?
+  description        String?
+  version            String?
+  last_played        String?   // Используем String для простоты, т.к. уже так делали
+  rating             Int       @default(0)
+  is_hidden          Boolean   @default(false)
+  completion_percent Int       @default(0)
+  
+  folders GameFolder[]
+}
+
+model Folder {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  games GameFolder[]
+}
+
+model GameFolder {
+  game_path String
+  folder_id Int
+  game      Game   @relation(fields: [game_path], references: [path], onDelete: Cascade)
+  folder    Folder @relation(fields: [folder_id], references: [id], onDelete: Cascade)
+
+  @@id([game_path, folder_id])
+}
+
+model Setting {
+  key   String @id
+  value String
+}
