@@ -19,7 +19,6 @@ interface GamePageActionsProps {
     handlers: ActionHandlers;
 }
 
-// Отдельный компонент для кнопки, чтобы не дублировать код
 const ActionButton = ({ children, onClick, className = '' }: { children: React.ReactNode, onClick?: () => void, className?: string }) => (
     <motion.button
         whileHover={{ scale: 1.05 }}
@@ -37,14 +36,13 @@ export function GamePageActions({ game, gameFolderIds, setGameFolderIds, handler
     const isRunning = isGameRunning(game.path);
 
     return (
-        // flex-wrap обеспечивает перенос кнопок на новую строку на узких экранах
         <div className="flex flex-wrap gap-3 p-4 justify-center md:justify-start">
             <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => callLaunchGameCommand(game.path, addSession, removeSession)}
                 disabled={isRunning}
-                className="h-10 px-6 bg-[#5417cf] text-white text-sm font-bold rounded-lg transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
+                className="h-10 px-6 bg-[#5417cf] text-text-primary text-sm font-bold rounded-lg transition-colors disabled:bg-gray-500 disabled:cursor-not-allowed"
             >
                 {isRunning ? 'Запущена' : 'Играть'}
             </motion.button>
@@ -64,7 +62,7 @@ export function GamePageActions({ game, gameFolderIds, setGameFolderIds, handler
                 {game.is_hidden ? 'Показать' : 'Скрыть'}
             </ActionButton>
 
-            <ActionButton onClick={handlers.onDeleteGame} className="bg-transparent text-red-500 hover:bg-red-500/10">
+            <ActionButton onClick={handlers.onDeleteGame} className="bg-accent-danger/20 text-accent-danger hover:bg-accent-danger/30">
                 <TrashIcon className="w-5 h-5" /> Удалить
             </ActionButton>
         </div>

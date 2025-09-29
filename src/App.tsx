@@ -3,8 +3,11 @@ import Layout from './components/Layout';
 import LibraryPage from './pages/LibraryPage';
 import GamePage from './pages/GamePage';
 import SettingsPage from './pages/SettingsPage.tsx';
+import { applyInitialTheme } from './utils/theme';
+
 
 function App() {
+  applyInitialTheme()
   return (
     <Routes>
       <Route path="/" element={<Layout />}>

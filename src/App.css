@@ -1,2 +1,66 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #111827;       /* bg-gray-900 */
+  --color-secondary: #1F2937;     /* bg-gray-800 */
+  --color-tertiary: #374151;      /* bg-gray-700 */
+  --color-text-primary: #F9FAFB;     /* text-gray-50 */
+  --color-text-secondary: #9CA3AF;   /* text-gray-400 */
+  --color-accent-primary: #3B82F6;   /* bg-blue-500 */
+  --color-accent-secondary: #2563EB; /* hover:bg-blue-600 */
+  --color-accent-success: #16A34A;   /* green-600 */
+  --color-accent-danger: #DC2626;    /* red-600 */
+  --color-border-color: #374151; 
+}
+.light {
+  --color-primary: #ffffff;       /* gray-50 */
+  --color-secondary: #f3f4f6;     /* white */
+  --color-tertiary: #f3f4f6;      /* gray-100 */
+  --color-text-primary: #1F2937;     /* gray-800 */
+  --color-text-secondary: #6B7280;   /* gray-500 */
+  --color-accent-primary: #3B82F6;   /* blue-500 */
+  --color-accent-secondary: #2563EB; /* blue-600 */
+  --color-accent-success: #16A34A;   /* green-600 */
+  --color-accent-danger: #DC2626;    /* red-600 */
+  --color-border-color: #E5E7EB; 
+}
+
+.dark {
+  --color-primary: #111827;       /* bg-gray-900 */
+  --color-secondary: #1F2937;     /* bg-gray-800 */
+  --color-tertiary: #374151;      /* bg-gray-700 */
+  --color-text-primary: #F9FAFB;     /* text-gray-50 */
+  --color-text-secondary: #9CA3AF;   /* text-gray-400 */
+  --color-accent-primary: #3B82F6;   /* bg-blue-500 */
+  --color-accent-secondary: #2563EB; /* hover:bg-blue-600 */
+  --color-accent-success: #16A34A;   /* green-600 */
+  --color-accent-danger: #DC2626;    /* red-600 */
+  --color-border-color: #374151; 
+}
+.forest {
+  --color-primary: #1a2a1a;       /* Очень темный зеленый */
+  --color-secondary: #2a3a2a;     /* Темный зеленый */
+  --color-tertiary: #3a4a3a;      /* Еще темнее */
+  --color-text-primary: #e0dcd2;     /* Бежевый */
+  --color-text-secondary: #a39e93;   /* Серый беж */
+  --color-accent-primary: #a87a4f;   /* Коричневый (дерево) */
+  --color-accent-secondary: #8c653f; /* Темнее коричневый */
+  --color-accent-success: #5a9a5a;   /* Светло-зеленый */
+  --color-accent-danger: #c75a5a;    /* Красноватый */
+  --color-border-color: #4a5a4a; 
+}
+
+.grid-library {
+    display: grid;
+    gap: 1.5rem; /* gap-6 в Tailwind */
+    /* --cols: 4 - значение по умолчанию для всех экранов */
+    grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
+  }
+  
+  /* Переопределяем --cols на больших экранах */
+  @media (min-width: 1024px) { /* lg: брейкпоинт Tailwind */
+    .grid-library {
+      /* --cols-lg: 6 - значение по умолчанию для больших экранов */
+      grid-template-columns: repeat(var(--cols-lg, 6), minmax(0, 1fr));
+    }
+  }

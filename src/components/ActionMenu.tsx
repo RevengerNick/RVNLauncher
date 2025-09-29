@@ -1,4 +1,4 @@
-import { Menu, Transition } from '@headlessui/react';
+import { Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { EllipsisVerticalIcon } from '@heroicons/react/20/solid';
 import { PhotoIcon, ClipboardDocumentIcon, TrashIcon } from '@heroicons/react/24/outline'; // Используем outline для консистентности
@@ -13,9 +13,9 @@ export function ActionMenu({ onIconChange, onPasteIcon, onDeleteIcon }: ActionMe
   return (
     <Menu as="div" className="relative inline-block text-left">
       <div>
-        <Menu.Button className="flex items-center rounded-full bg-black/50 p-2 text-white hover:bg-black/70 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
+        <MenuButton className="flex items-center rounded-full bg-black/50 p-2 text-white hover:bg-black/70 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
           <EllipsisVerticalIcon className="size-7" aria-hidden="true" />
-        </Menu.Button>
+        </MenuButton>
       </div>
 
       <Transition
@@ -27,9 +27,9 @@ export function ActionMenu({ onIconChange, onPasteIcon, onDeleteIcon }: ActionMe
         leaveFrom="transform opacity-100 scale-100"
         leaveTo="transform opacity-0 scale-95"
       >
-        <Menu.Items className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-600 rounded-md bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+        <MenuItems className="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-700 rounded-md bg-secondary shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
           <div className="px-1 py-1 ">
-            <Menu.Item>
+            <MenuItem>
               {({ active }) => (
                 <button
                   onClick={onIconChange}
@@ -41,8 +41,8 @@ export function ActionMenu({ onIconChange, onPasteIcon, onDeleteIcon }: ActionMe
                   Выбрать файл
                 </button>
               )}
-            </Menu.Item>
-            <Menu.Item>
+            </MenuItem>
+            <MenuItem>
               {({ active }) => (
                 <button
                   onClick={onPasteIcon}
@@ -54,11 +54,11 @@ export function ActionMenu({ onIconChange, onPasteIcon, onDeleteIcon }: ActionMe
                   Вставить из буфера
                 </button>
               )}
-            </Menu.Item>
+            </MenuItem>
           </div>
           {onDeleteIcon && (
             <div className="px-1 py-1">
-              <Menu.Item>
+              <MenuItem>
                 {({ active }) => (
                   <button
                     onClick={onDeleteIcon}
@@ -70,10 +70,10 @@ export function ActionMenu({ onIconChange, onPasteIcon, onDeleteIcon }: ActionMe
                     Удалить иконку
                   </button>
                 )}
-              </Menu.Item>
+              </MenuItem>
             </div>
           )}
-        </Menu.Items>
+        </MenuItems>
       </Transition>
     </Menu>
   );

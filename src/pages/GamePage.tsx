@@ -8,10 +8,12 @@ import { GameMetadata } from '../components/GameMetadata';
 import { GameSavesManager } from '../components/GameSavesManager';
 import { motion } from 'framer-motion';
 import { useParams } from 'react-router-dom';
+import { useConfirm } from '../context/ConfirmContext';
 
 export function GamePage() {
   const navigate = useNavigate();
   const gamePath = useParams<{ gamePath: string }>().gamePath;
+  const confirm = useConfirm();
   
   const {
     game,
@@ -32,7 +34,13 @@ export function GamePage() {
   } = useGameDetails(gamePath);
 
   const handleDeleteGame = async () => {
-    if (game && window.confirm(`Вы уверены, что хотите удалить игру "${game.name}" из библиотеки?`)) {
+    const isConfirmed = await confirm({
+      title: 'Удаление игры',
+      description: `Вы уверены, что хотите удалить игру "${game?.name}" из библиотеки?`,
+      confirmText: 'Удалить',
+      cancelText: 'Отменить',
+    });
+    if (isConfirmed && game) {
       await deleteGame(game.path);
       navigate('/');
     }
@@ -108,3 +116,4 @@ export function GamePage() {
 }
 
 export default GamePage;
+

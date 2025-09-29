@@ -1,3 +1,5 @@
+import { getTheme } from "./theme";
+
 /**
  * Простая хэш-функция для строки.
  * @param str Входная строка (название игры).
@@ -20,6 +22,7 @@ function simpleHash(str: string): number {
    */
   export function generateGradientColors(seed: string): { color1: string; color2: string } {
     const hash = simpleHash(seed);
+    const theme = getTheme();
     
     // Используем хэш для получения значений hue (оттенок)
     const hue1 = Math.abs(hash) % 360;
@@ -27,7 +30,10 @@ function simpleHash(str: string): number {
   
     // Фиксируем saturation (насыщенность) и lightness (светлота) для пастельных тонов
     const saturation = 60;
-    const lightness = 12;
+    let lightness = 12;
+    if (theme === 'light') {
+      lightness = 88;
+    }
   
     const color1 = `hsl(${hue1}, ${saturation}%, ${lightness}%)`;
     const color2 = `hsl(${hue2}, ${saturation}%, ${lightness}%)`;

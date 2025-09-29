@@ -24,12 +24,11 @@ export function GameSavesManager({ game }: GameSavesManagerProps) {
   const handleBackup = async () => {
     if (game) {
       await startBackup(game);
-      await fetchBackups(); // Обновляем список после создания
+      await fetchBackups(); 
     }
   };
 
   const handleDelete = async (backupPath: string) => {
-    // Вызываем наше модальное окно
     const isConfirmed = await confirm({
         title: 'Удалить бэкап?',
         description: 'Это действие необратимо. Вы уверены, что хотите удалить этот файл бэкапа?',
@@ -37,7 +36,6 @@ export function GameSavesManager({ game }: GameSavesManagerProps) {
         kind: 'danger'
     });
 
-    // Продолжаем, только если пользователь нажал "Да, удалить"
     if (isConfirmed) {
       try {
         await deleteBackup(backupPath);
@@ -72,7 +70,6 @@ export function GameSavesManager({ game }: GameSavesManagerProps) {
   const handleSelectRestoreStrategy = async (strategy: RestoreStrategy) => {
     setIsRestoreModalOpen(false);
 
-    // Дополнительное подтверждение для опасного действия
     if (strategy === 'delete') {
       const isConfirmed = await confirm({
         title: "Вы уверены?",
@@ -97,7 +94,7 @@ export function GameSavesManager({ game }: GameSavesManagerProps) {
         onClose={() => setIsRestoreModalOpen(false)}
         onSelectStrategy={handleSelectRestoreStrategy}
       />
-      <h2 className="text-2xl font-bold mb-2">Сохранения</h2>
+      <h2 className="text-2xl font-bold mb-2 text-text-primary">Сохранения</h2>
       <div className="flex items-center gap-4">
         <button 
           onClick={handleBackup} 
@@ -107,20 +104,20 @@ export function GameSavesManager({ game }: GameSavesManagerProps) {
         </button>
         <button 
           onClick={() => handleOpenBackupsFolder(game)} 
-          className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded text-lg"
+          className="bg-primary hover:bg-tertiary text-text-primary font-bold py-3 px-6 rounded text-lg"
         >
           Открыть папку бэкапов
         </button>
       </div>
       <div className="mt-4">
-        <h3 className="text-lg font-semibold mb-2">Доступные бэкапы:</h3>
+        <h3 className="text-lg font-semibold mb-2 text-text-primary">Доступные бэкапы:</h3>
         {backups.length > 0 ? (
           <ul className="space-y-2">
             {backups.map(backup => (
-              <li key={backup.path} className="bg-gray-800 p-3 rounded-md flex justify-between items-center">
+              <li key={backup.path} className="bg-secondary p-3 rounded-md flex justify-between items-center">
                 <div>
-                  <p className="font-semibold">{backup.file_name}</p>
-                  <p className="text-xs text-gray-400">Создан: {new Date(backup.created_at).toLocaleString()}</p>
+                  <p className="font-semibold text-text-primary">{backup.file_name}</p>
+                  <p className="text-xs text-text-primary">Создан: {new Date(backup.created_at).toLocaleString()}</p>
                 </div>
                 <div className="flex gap-2">
                 <button 
@@ -140,7 +137,7 @@ export function GameSavesManager({ game }: GameSavesManagerProps) {
             ))}
           </ul>
         ) : (
-          <p className="text-gray-400">Бэкапы для этой игры еще не созданы.</p>
+          <p className="text-text-primary">Бэкапы для этой игры еще не созданы.</p>
         )}
       </div>
     </div>

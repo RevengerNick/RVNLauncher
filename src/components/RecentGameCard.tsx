@@ -26,7 +26,7 @@ export function RecentGameCard({ game, iconDataUrl }: RecentGameCardProps) {
       className="block bg-secondary rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:scale-110 transition-all duration-300"
     >
       {/* Фоновое изображение (баннер) */}
-      <div className="h-32 bg-gray-700 relative" style={gradientStyle}>
+      <div className="h-32 bg-primary relative" style={gradientStyle}>
         {iconDataUrl && (
           <img src={convertFileSrc(iconDataUrl || '')} alt={game.name} className="w-full h-full object-cover opacity-60" />
         )}
@@ -36,13 +36,13 @@ export function RecentGameCard({ game, iconDataUrl }: RecentGameCardProps) {
         <h3 className="font-bold text-xl text-text-primary truncate" title={formatGameName(game.name)}>
           {formatGameName(game.name)}
         </h3>
-        <p className="flex justify-between text-sm text-text-secondary mt-1">
+        <div className="flex justify-between text-sm text-text-secondary mt-1">
           Сыграно: {formatPlaytime(game.play_time_seconds)}
           <StarRating rating={game.rating} starSize="smallMedium" />
-        </p>
+        </div>
 
         {/* Прогресс-бар */}
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-3">
+        <div className="w-full bg-primary rounded-full h-2 mt-3">
           <div 
             className="bg-accent h-2 rounded-full" 
             style={{ width: `${progress}%` }}

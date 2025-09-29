@@ -1,4 +1,4 @@
-import { Dialog, Transition } from '@headlessui/react';
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { Fragment } from 'react';
 import { ArchiveBoxIcon, ArrowPathIcon, TrashIcon } from '@heroicons/react/24/outline';
 
@@ -14,15 +14,20 @@ export function RestoreStrategyModal({ isOpen, onClose, onSelectStrategy }: Rest
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
-        {/* ... (код затемнения фона, как в ConfirmModal) */}
         <div className="fixed inset-0 bg-black bg-opacity-50" />
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child /* ... */>
-              <Dialog.Panel className="w-full max-w-lg transform overflow-hidden rounded-2xl bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
-                <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-white">
+            <TransitionChild as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0">
+              <DialogPanel className="w-full max-w-lg transform overflow-hidden rounded-2xl bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
+                <DialogTitle as="h3" className="text-lg font-medium leading-6 text-white">
                   Обнаружены существующие сохранения
-                </Dialog.Title>
+                </DialogTitle>
                 <div className="mt-2">
                   <p className="text-sm text-gray-400">
                     Что сделать с текущей папкой сохранений перед восстановлением из бэкапа?
@@ -55,8 +60,8 @@ export function RestoreStrategyModal({ isOpen, onClose, onSelectStrategy }: Rest
                 <div className="mt-4 text-right">
                     <button onClick={onClose} className="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded">Отмена</button>
                 </div>
-              </Dialog.Panel>
-            </Transition.Child>
+              </DialogPanel>
+            </TransitionChild>
           </div>
         </div>
       </Dialog>

@@ -9,7 +9,6 @@ interface ConfirmOptions {
   kind?: 'danger' | 'success';
 }
 
-// Тип контекста: функция `confirm`, которая возвращает Promise<boolean>
 type ConfirmContextType = (options: ConfirmOptions) => Promise<boolean>;
 
 const ConfirmContext = createContext<ConfirmContextType | undefined>(undefined);
@@ -17,7 +16,6 @@ const ConfirmContext = createContext<ConfirmContextType | undefined>(undefined);
 export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
   const [options, setOptions] = useState<ConfirmOptions | null>(null);
   
-  // Создаем "обещание", которое мы будем разрешать или отклонять
   const [resolveReject, setResolveReject] = useState<[(value: boolean) => void, (reason?: any) => void] | null>(null);
 
   const confirm = useCallback((options: ConfirmOptions) => {
@@ -29,14 +27,14 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
 
   const handleClose = () => {
     if (resolveReject) {
-      resolveReject[0](false); // Разрешаем Promise со значением `false` (отмена)
+      resolveReject[0](false); 
     }
     setOptions(null);
   };
 
   const handleConfirm = () => {
     if (resolveReject) {
-      resolveReject[0](true); // Разрешаем Promise со значением `true` (подтверждение)
+      resolveReject[0](true); 
     }
     setOptions(null);
   };

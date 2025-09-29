@@ -4,22 +4,34 @@ import { formatGameName } from '../utils/formatters';
 import { generateGradientColors } from '../utils/gradient-generator';
 import StarRating from './StarRating';
 import { convertFileSrc } from '@tauri-apps/api/core';
+import { useEffect, useState } from 'react';
 
 interface PosterGameCardProps {
   game: GameEntry;
   iconUrl: string | undefined;
+  aspectRatio: string;
 }
 
-export function PosterGameCard({ game, iconUrl }: PosterGameCardProps) {
+const ratioMap: Record<string, string> = {
+    '2/3': 'aspect-[2/3]',
+    '3/4': 'aspect-[3/4]',
+    '4/3': 'aspect-[4/3]',
+    '1/1': 'aspect-[1/1]',
+    '16/9': 'aspect-[16/9]',
+    '9/16': 'aspect-[9/16]',
+};
+
+export function PosterGameCard({ game, iconUrl, aspectRatio }: PosterGameCardProps) {
     const encodedPath = encodeURIComponent(game.path);
-    const { color1, color2 } = generateGradientColors(game.name);
-    const gradientStyle = {
-        backgroundImage: `linear-gradient(to top, black, ${color1}, ${color2}, transparent 95%)`,
-    };
-    console.log(iconUrl)
+    const [gradientStyle, setGradientStyle] = useState({});
+    useEffect(() => {
+        const { color1, color2 } = generateGradientColors(game.name);
+        setGradientStyle({ backgroundImage: `linear-gradient(to top, black, ${color1}, ${color2}, transparent 95%)` });
+    }, []);
+    //const aspectClass = `aspect-[${aspectRatio.replace('/', '/')}]`;
 
     return (
-        <Link to={`/game/${encodedPath}`} className="block relative aspect-[2/3] bg-secondary rounded-2xl overflow-hidden hover:scale-115 transition-all duration-200 shadow-md group">
+        <Link to={`/game/${encodedPath}`} className={"block relative bg-primary " + ratioMap[aspectRatio] + " rounded-2xl overflow-hidden hover:scale-115 transition-all duration-200 shadow-md group"}>
             {iconUrl ? (
                 <div>
                     <img
@@ -39,7 +51,7 @@ export function PosterGameCard({ game, iconUrl }: PosterGameCardProps) {
                 </div>
             ) : (
                 <div className="h-1/2 flex items-center justify-center">
-                    <div className="w-full h-full flex items-center justify-center text-text-secondary">Нет постера</div>
+                    <div className="w-full h-full flex items-center justify-center text-text-primary">Нет постера</div>
                     <div className={`absolute inset-0 `} style={gradientStyle}></div>
                 </div>
             )}

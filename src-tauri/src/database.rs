@@ -84,7 +84,9 @@ fn migrate_v1_initial_tables(conn: &Connection) -> Result<()> {
             key TEXT PRIMARY KEY,
             value TEXT NOT NULL
         );
-        INSERT OR IGNORE INTO settings (key, value) VALUES ('gridSize', '4');
+        INSERT OR IGNORE INTO settings (key, value) VALUES ('gridSmall', '3');
+        INSERT OR IGNORE INTO settings (key, value) VALUES ('gridLarge', '6');
+        INSERT OR IGNORE INTO settings (key, value) VALUES ('posterRatio', '2/3');
         INSERT OR IGNORE INTO settings (key, value) VALUES ('theme', 'dark');
         COMMIT;"
     )?;
@@ -336,13 +338,13 @@ pub fn db_get_folders_for_game(game_path: String) -> Result<Vec<i64>, String> {
 }
 
 #[tauri::command]
-pub fn db_delete_game(path: String) -> Result<(), String> {
+pub fn db_delete_game(game_path: String) -> Result<(), String> {
     with_db(|conn| {
-        conn.execute("DELETE FROM games WHERE path = ?1", [path.clone()])?;
+        conn.execute("DELETE FROM games WHERE path = ?1", [game_path.clone()])?;
         // Также удаляем игру из всех папок, если она там была
         conn.execute(
             "DELETE FROM game_folders WHERE game_path = ?1",
-            [path.clone()],
+            [game_path.clone()],
         )?;
         Ok(())
     })

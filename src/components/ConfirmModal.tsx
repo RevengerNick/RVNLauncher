@@ -1,4 +1,4 @@
-import { Dialog, Transition } from '@headlessui/react';
+import { Dialog, Transition, TransitionChild, DialogPanel, DialogTitle } from '@headlessui/react';
 import { Fragment } from 'react';
 import { ExclamationTriangleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 
@@ -10,7 +10,7 @@ interface ConfirmModalProps {
   description: string;
   confirmText?: string;
   cancelText?: string;
-  kind?: 'danger' | 'success'; // Для разного цвета кнопок
+  kind?: 'danger' | 'success';
 }
 
 export function ConfirmModal({
@@ -22,7 +22,7 @@ export function ConfirmModal({
   confirmText = 'Подтвердить',
   cancelText = 'Отмена',
   kind = 'danger',
-}: ConfirmModalProps) {
+} : ConfirmModalProps) {
 
   const handleConfirm = () => {
     onConfirm();
@@ -32,8 +32,8 @@ export function ConfirmModal({
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
-        {/* Затемнение фона */}
-        <Transition.Child
+        
+        <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
           enterFrom="opacity-0"
@@ -42,12 +42,12 @@ export function ConfirmModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-50" />
-        </Transition.Child>
+          <div className="fixed inset-0 bg-black/70" /> 
+        </TransitionChild>
 
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
+                      <TransitionChild
               as={Fragment}
               enter="ease-out duration-300"
               enterFrom="opacity-0 scale-95"
@@ -56,9 +56,7 @@ export function ConfirmModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
-                <div className="flex items-start">
-                  {/* Иконка */}
+              <DialogPanel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-gray-800 p-6 text-left align-middle shadow-xl transition-all"><div className="flex items-start">
                   <div className={`mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full ${kind === 'danger' ? 'bg-red-900/50' : 'bg-green-900/50'} sm:mx-0 sm:h-10 sm:w-10`}>
                     {kind === 'danger' ? (
                       <ExclamationTriangleIcon className="h-6 w-6 text-red-400" aria-hidden="true" />
@@ -67,16 +65,15 @@ export function ConfirmModal({
                     )}
                   </div>
                   <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                    <Dialog.Title as="h3" className="text-lg font-medium leading-6 text-white">
+                    <DialogTitle as="h3" className="text-lg font-medium leading-6 text-white">
                       {title}
-                    </Dialog.Title>
+                    </DialogTitle>
                     <div className="mt-2">
                       <p className="text-sm text-gray-400">{description}</p>
                     </div>
                   </div>
                 </div>
                 
-                {/* Кнопки */}
                 <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                   <button
                     type="button"
@@ -95,8 +92,8 @@ export function ConfirmModal({
                     {cancelText}
                   </button>
                 </div>
-              </Dialog.Panel>
-            </Transition.Child>
+              </DialogPanel>
+            </TransitionChild>
           </div>
         </div>
       </Dialog>
